@@ -354,20 +354,24 @@
                         <div style={{ margin: '1.5rem 0' }}>
                             {quizzes.length === 0 && <p style={{ opacity: 0.6, textAlign: 'center' }}>No quizzes yet.</p>}
                             {quizzes.map((q, i) => (
-                                <div key={i} className="leaderboard-row" style={{ flexDirection: 'column', padding: '20px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
-                                        <span style={{ fontWeight: 800 }}>{q.title}</span>
-                                        <span>{q.questions.length} Qs</span>
+                                <div key={i} className="leaderboard-row" style={{ flexDirection: 'column', padding: '24px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '15px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '15px' }}>
+                                        <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary)' }}>{q.title}</span>
+                                        <span style={{ opacity: 0.6 }}>{q.questions.length} Questions</span>
                                     </div>
+                                    <button
+                                        onClick={() => createGame(q.id)}
+                                        style={{ background: 'linear-gradient(to right, #10b981, #059669)', padding: '15px', borderRadius: '12px', fontSize: '1rem', marginBottom: '10px' }}
+                                    >
+                                        HOST GAME 🎮
+                                    </button>
                                     <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
-                                        <button
-                                            onClick={() => createGame(q.id)}
-                                            style={{ background: 'linear-gradient(to right, #10b981, #059669)', fontSize: '0.9rem', flex: 1 }}
-                                        >
-                                            HOST PLAYING QUIZ 🎮
+                                        <button onClick={() => editQuiz(q)} style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid #3b82f6', flex: 1, padding: '10px' }}>
+                                            EDIT QUIZ ✏️
                                         </button>
-                                        <button onClick={() => editQuiz(q)} style={{ background: '#3b82f6', width: 'auto', padding: '0 15px' }}>✏️</button>
-                                        <button onClick={() => deleteQuiz(q.id)} style={{ background: '#ef4444', width: 'auto', padding: '0 15px' }}>🗑️</button>
+                                        <button onClick={() => deleteQuiz(q.id)} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: '1px solid #ef4444', flex: 1, padding: '10px' }}>
+                                            DELETE 🗑️
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -468,28 +472,30 @@
                                     <button
                                         disabled={slideIdx === 0}
                                         onClick={() => setSlideIdx(slideIdx - 1)}
-                                        style={{ background: 'rgba(255,255,255,0.1)', opacity: slideIdx === 0 ? 0.3 : 1 }}
+                                        style={{ background: 'rgba(255,255,255,0.1)', opacity: slideIdx === 0 ? 0.3 : 1, flex: 1 }}
                                     >
-                                        ⬅️ BACK SLIDE
+                                        ⬅️ PREVIOUS
                                     </button>
                                     <button
                                         disabled={slideIdx === currentQuiz.questions.length - 1}
                                         onClick={() => setSlideIdx(slideIdx + 1)}
-                                        style={{ background: 'rgba(255,255,255,0.1)', opacity: slideIdx === currentQuiz.questions.length - 1 ? 0.3 : 1 }}
+                                        style={{ background: 'rgba(255,255,255,0.1)', opacity: slideIdx === currentQuiz.questions.length - 1 ? 0.3 : 1, flex: 1 }}
                                     >
-                                        NEXT SLIDE ➡️
+                                        NEXT ➡️
                                     </button>
+                                </div>
+                                <div style={{ marginTop: '15px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '15px' }}>
                                     <button
                                         onClick={() => {
-                                            if (confirm('Delete this slide?')) {
+                                            if (confirm('Delete this entire question?')) {
                                                 const newQs = currentQuiz.questions.filter((_, i) => i !== slideIdx);
                                                 setCurrentQuiz({ ...currentQuiz, questions: newQs });
                                                 if (slideIdx > 0) setSlideIdx(slideIdx - 1);
                                             }
                                         }}
-                                        style={{ background: '#ef4444', width: 'auto' }}
+                                        style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid #ef4444' }}
                                     >
-                                        🗑️
+                                        DELETE THIS QUESTION 🗑️
                                     </button>
                                 </div>
                             </div>
