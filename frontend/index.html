@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AhoorQuiz - Real-time Gaming</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --bg: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --text: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #root {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 2rem;
+            background: linear-gradient(to right, #818cf8, #c084fc, #f472b6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            color: white;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.5);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 2rem;
+        }
+
+        .option-btn {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            border-radius: 16px;
+        }
+
+        .bet-chips {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 1.5rem;
+        }
+
+        .chip {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .chip.active {
+            background: var(--accent);
+            box-shadow: 0 0 15px var(--accent);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+
+        .pin-display {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: 0.5rem;
+            text-align: center;
+            color: var(--accent);
+            margin: 1rem 0;
+        }
+
+        .leaderboard-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .creator-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .question-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .type-badge {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: var(--primary);
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+
+        .option-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        .option-input input[type="checkbox"],
+        .option-input input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const App = () => {
+            const [view, setView] = useState('join'); // join, lobby, question, wait, leaderboard, gameOver, creator, quizList
+            const [socket, setSocket] = useState(null);
+            const [pin, setPin] = useState('');
+            const [nickname, setNickname] = useState('');
+            const [gameData, setGameData] = useState({ players: [], question: null, score: 0, leaderboard: [], title: '' });
+            const [bet, setBet] = useState(0);
+            const [status, setStatus] = useState(null);
+            const [quizzes, setQuizzes] = useState([]);
+            const [currentQuiz, setCurrentQuiz] = useState({ id: null, title: '', questions: [] });
+            const [slideIdx, setSlideIdx] = useState(0);
+            const [isHost, setIsHost] = useState(false);
+            const [openAnswer, setOpenAnswer] = useState('');
+            const [answeredCount, setAnsweredCount] = useState(0);
+            const [isQuickPlay, setIsQuickPlay] = useState(false);
+
+
+            useEffect(() => {
+                const newSocket = io(); // Connect to the same host that served the page
+                setSocket(newSocket);
+
+                newSocket.on('connect', () => console.log('DEBUG: Socket connected!', newSocket.id));
+                newSocket.on('error', (err) => { console.error('DEBUG: Socket Error', err); alert('Error: ' + err.message); });
+
+                newSocket.on('all_quizzes', (data) => setQuizzes(data.quizzes));
+                newSocket.on('game_created', (data) => {
+                    setPin(data.pin);
+                    setGameData(prev => ({ ...prev, title: data.title }));
+                    setIsHost(true);
+                    setView('lobby');
+                });
+                newSocket.on('join_success', (data) => {
+                    setPin(data.pin);
+                    setIsHost(false);
+                    setView('lobby');
+                });
+                newSocket.on('player_joined', (data) => { setGameData(prev => ({ ...prev, players: data.players })); });
+
+                newSocket.on('next_question', (data) => {
+                    setGameData(prev => ({ ...prev, question: data }));
+                    setStatus(null); setBet(0); setMultiAnswers([]); setOpenAnswer(''); setAnsweredCount(0);
+                    setView('question');
+                });
+
+                newSocket.on('answer_received', (data) => {
+                    if (data.is_host_update) {
+                        setAnsweredCount(data.count);
+                    } else {
+                        setStatus(data); setGameData(prev => ({ ...prev, score: data.new_score })); setView('wait');
+                    }
+                });
+
+                newSocket.on('update_leaderboard', (data) => {
+                    setGameData(prev => ({ ...prev, leaderboard: data.leaderboard }));
+                });
+
+                newSocket.on('game_over', () => { console.log('DEBUG: Game Over'); setView('gameOver'); });
+
+                return () => newSocket.close();
+            }, []);
+
+            const joinGame = () => { if (pin && nickname) socket.emit('join_game', { pin, nickname }); };
+            const createGame = (quizId) => { socket.emit('create_game', { quiz_id: quizId }); };
+            const startGame = () => { socket.emit('start_game', { pin }); };
+            const proceedNext = () => { socket.emit('next_question', { pin }); };
+            const deleteQuiz = (quizId) => { if (confirm('Are you sure you want to delete this quiz?')) socket.emit('delete_quiz', { quiz_id: quizId }); };
+
+            const [multiAnswers, setMultiAnswers] = useState([]);
+            const submitAnswer = (option) => {
+                if (gameData.question.type === 'multi-select') {
+                    const newAnswers = multiAnswers.includes(option)
+                        ? multiAnswers.filter(a => a !== option)
+                        : [...multiAnswers, option];
+                    setMultiAnswers(newAnswers);
+                } else {
+                    console.log('DEBUG: Submitting answer', { pin, answer: option, bet });
+                    socket.emit('submit_answer', { pin, answer: option, bet });
+                }
+            };
+
+            const submitMulti = () => {
+                socket.emit('submit_answer', { pin, answer: multiAnswers, bet });
+                setMultiAnswers([]);
+            };
+
+            const saveQuiz = () => {
+                if (!currentQuiz.title || currentQuiz.questions.length === 0) return alert('Please add a title and questions');
+                // Ensure at least one answer is selected for each question
+                const invalid = currentQuiz.questions.find(q => !q.answer || (Array.isArray(q.answer) && q.answer.length === 0));
+                if (invalid) return alert('Each question needs at least one correct answer selected');
+
+                socket.emit('save_quiz', { quiz: currentQuiz });
+                setView('quizList');
+            };
+
+            const addQuestion = (type) => {
+                const newQ = {
+                    type,
+                    question: '',
+                    options: type === 'tf' ? ['True', 'False'] : ['', '', '', ''],
+                    answer: type === 'multi-select' ? [] : ''
+                };
+                const newQs = [...currentQuiz.questions, newQ];
+                setCurrentQuiz(prev => ({ ...prev, questions: newQs }));
+                setSlideIdx(newQs.length - 1);
+            };
+
+            if (view === 'join') {
+                return (
+                    <div className="card">
+                        <h1>AhoorQuiz</h1>
+                        <div className="input-group"><input placeholder="GAME PIN" value={pin} onChange={(e) => setPin(e.target.value)} /></div>
+                        <div className="input-group"><input placeholder="NICKNAME" value={nickname} onChange={(e) => setNickname(e.target.value)} /></div>
+                        <button onClick={joinGame}>Enter Game</button>
+                        <p style={{ textAlign: 'center', margin: '1rem 0', opacity: 0.6 }}>or</p>
+                        <button onClick={() => setView('quizList')} style={{ background: 'transparent', border: '3px solid var(--primary)' }}>Host a Session</button>
+                    </div>
+                );
+            }
+
+            if (view === 'quizList') {
+                return (
+                    <div className="card">
+                        <h1>Your Quizzes</h1>
+                        <div style={{ margin: '1.5rem 0' }}>
+                            {quizzes.length === 0 && <p style={{ opacity: 0.6, textAlign: 'center' }}>No quizzes yet.</p>}
+                            {quizzes.map((q, i) => (
+                                <div key={i} className="leaderboard-row" style={{ flexDirection: 'column', padding: '20px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
+                                        <span style={{ fontWeight: 800 }}>{q.title}</span>
+                                        <span>{q.questions.length} Qs</span>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                                        <button
+                                            onClick={() => createGame(q.id)}
+                                            style={{ background: 'linear-gradient(to right, #10b981, #059669)', fontSize: '0.9rem', flex: 1 }}
+                                        >
+                                            HOST PLAYING QUIZ 🎮
+                                        </button>
+                                        <button onClick={() => deleteQuiz(q.id)} style={{ background: '#ef4444', width: 'auto', padding: '0 15px' }}>🗑️</button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <button onClick={() => { setCurrentQuiz({ id: null, title: '', questions: [] }); setSlideIdx(0); setView('creator'); }}>CREATE NEW QUIZ ➕</button>
+                        <button onClick={() => setView('join')} style={{ marginTop: '10px', background: 'rgba(255,255,255,0.1)' }}>BACK</button>
+                    </div>
+                );
+            }
+
+            if (view === 'creator') {
+                const q = currentQuiz.questions[slideIdx];
+                return (
+                    <div className="card" style={{ maxWidth: '800px', width: '95%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h1>{currentQuiz.title || 'New Quiz'}</h1>
+                            <button onClick={saveQuiz} style={{ width: 'auto', background: 'var(--accent)' }}>FINISH QUIZ ✅</button>
+                        </div>
+
+                        <div className="input-group">
+                            <input
+                                placeholder="Quiz Title"
+                                value={currentQuiz.title}
+                                onChange={(e) => setCurrentQuiz({ ...currentQuiz, title: e.target.value })}
+                                style={{ fontSize: '1.5rem', textAlign: 'center' }}
+                            />
+                        </div>
+
+                        {currentQuiz.questions.length === 0 ? (
+                            <div style={{ textAlign: 'center', margin: '3rem 0' }}>
+                                <p style={{ opacity: 0.6 }}>Add your first question below!</p>
+                            </div>
+                        ) : (
+                            <div className="question-card">
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                                    <span style={{ opacity: 0.6 }}>Slide {slideIdx + 1} of {currentQuiz.questions.length}</span>
+                                    <span className="type-badge">{q.type}</span>
+                                </div>
+
+                                <input
+                                    className="input-group"
+                                    placeholder="Type question here..."
+                                    value={q.question}
+                                    onChange={(e) => {
+                                        const newQs = [...currentQuiz.questions];
+                                        newQs[slideIdx].question = e.target.value;
+                                        setCurrentQuiz({ ...currentQuiz, questions: newQs });
+                                    }}
+                                    style={{ fontSize: '1.2rem' }}
+                                />
+
+                                <div style={{ marginTop: '10px', opacity: 0.8, fontSize: '0.8rem', marginBottom: '5px' }}>MARK CORRECT ANSWERS</div>
+                                {q.type !== 'open' ? (
+                                    q.options.map((opt, oIndex) => (
+                                        <div key={oIndex} className="option-input" style={{ background: 'rgba(255,255,255,0.02)', padding: '5px', borderRadius: '8px' }}>
+                                            <input
+                                                type={q.type === 'multi-select' ? 'checkbox' : 'radio'}
+                                                name={`q-${slideIdx}`}
+                                                checked={q.type === 'multi-select' ? q.answer.includes(opt) : q.answer === opt}
+                                                onChange={() => {
+                                                    const newQs = [...currentQuiz.questions];
+                                                    if (q.type === 'multi-select') {
+                                                        const currentAnswers = Array.isArray(newQs[slideIdx].answer) ? newQs[slideIdx].answer : [];
+                                                        if (currentAnswers.includes(opt)) {
+                                                            newQs[slideIdx].answer = currentAnswers.filter(a => a !== opt);
+                                                        } else {
+                                                            newQs[slideIdx].answer = [...currentAnswers, opt];
+                                                        }
+                                                    } else {
+                                                        newQs[slideIdx].answer = opt;
+                                                    }
+                                                    setCurrentQuiz({ ...currentQuiz, questions: newQs });
+                                                }}
+                                            />
+                                            <input
+                                                placeholder={`Option ${oIndex + 1}`}
+                                                value={opt}
+                                                onChange={(e) => {
+                                                    const newQs = [...currentQuiz.questions];
+                                                    const oldVal = newQs[slideIdx].options[oIndex];
+                                                    newQs[slideIdx].options[oIndex] = e.target.value;
+                                                    if (q.type !== 'multi-select' && newQs[slideIdx].answer === oldVal) newQs[slideIdx].answer = e.target.value;
+                                                    setCurrentQuiz({ ...currentQuiz, questions: newQs });
+                                                }}
+                                                style={{ border: 'none', background: 'transparent' }}
+                                            />
+                                        </div>
+                                    ))
+                                ) : (
+                                    <input placeholder="Type correct answer here..." value={q.answer} onChange={(e) => {
+                                        const newQs = [...currentQuiz.questions];
+                                        newQs[slideIdx].answer = e.target.value;
+                                        setCurrentQuiz({ ...currentQuiz, questions: newQs });
+                                    }} />
+                                )}
+
+                                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                                    <button
+                                        disabled={slideIdx === 0}
+                                        onClick={() => setSlideIdx(slideIdx - 1)}
+                                        style={{ background: 'rgba(255,255,255,0.1)', opacity: slideIdx === 0 ? 0.3 : 1 }}
+                                    >
+                                        ⬅️ BACK SLIDE
+                                    </button>
+                                    <button
+                                        disabled={slideIdx === currentQuiz.questions.length - 1}
+                                        onClick={() => setSlideIdx(slideIdx + 1)}
+                                        style={{ background: 'rgba(255,255,255,0.1)', opacity: slideIdx === currentQuiz.questions.length - 1 ? 0.3 : 1 }}
+                                    >
+                                        NEXT SLIDE ➡️
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            if (confirm('Delete this slide?')) {
+                                                const newQs = currentQuiz.questions.filter((_, i) => i !== slideIdx);
+                                                setCurrentQuiz({ ...currentQuiz, questions: newQs });
+                                                if (slideIdx > 0) setSlideIdx(slideIdx - 1);
+                                            }
+                                        }}
+                                        style={{ background: '#ef4444', width: 'auto' }}
+                                    >
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        <div style={{ margin: '1rem 0', textAlign: 'center', fontSize: '0.8rem', opacity: 0.6 }}>ADD A NEW SLIDE TYPE:</div>
+                        <div className="options-grid">
+                            <button onClick={() => addQuestion('multi')} style={{ background: '#3b82f6' }}>+ MULTI CHOICE</button>
+                            <button onClick={() => addQuestion('tf')} style={{ background: '#f59e0b' }}>+ TRUE/FALSE</button>
+                            <button onClick={() => addQuestion('multi-select')} style={{ background: '#8b5cf6' }}>+ MULTI SELECT</button>
+                            <button onClick={() => addQuestion('open')} style={{ background: '#ec4899' }}>+ OPEN ENDED</button>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (view === 'lobby') {
+                return (
+                    <div className="card">
+                        <div style={{ textAlign: 'center' }}><p style={{ opacity: 0.6 }}>PIN: {pin}</p><h1>{gameData.title}</h1></div>
+                        <h2>Players ({gameData.players.length})</h2>
+                        <div style={{ maxHeight: '200px', overflowY: 'auto', margin: '1rem 0' }}>
+                            {gameData.players.map((p, i) => <div key={i} className="leaderboard-row"><span>{p.nickname}</span></div>)}
+                        </div>
+                        <button onClick={startGame}>Start Game</button>
+                    </div>
+                );
+            }
+
+            if (view === 'question' && gameData.question) {
+                return (
+                    <div className="card">
+                        <div className="stats"><span>Score: {gameData.score}</span><span>Q{gameData.question.index + 1}</span></div>
+                        <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>{gameData.question.question}</h2>
+
+                        {isHost ? (
+                            <div style={{ textAlign: 'center' }}>
+                                <div style={{ fontSize: '3rem', fontWeight: 800, margin: '2rem 0' }}>{answeredCount}</div>
+                                <p style={{ opacity: 0.6 }}>Answers Received</p>
+                                <button onClick={proceedNext} style={{ marginTop: '2rem' }}>Next Question (Skip)</button>
+                            </div>
+                        ) : (
+                            gameData.question.type === 'open' ? (
+                                <div className="input-group">
+                                    <input placeholder="Type your answer..." value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submitAnswer(openAnswer); }} />
+                                    <button onClick={() => submitAnswer(openAnswer)} style={{ marginTop: '10px' }}>Submit</button>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="bet-chips">
+                                        {[0, 10, 25, 50].map(val => (
+                                            <div key={val} className={`chip ${bet === val ? 'active' : ''}`} onClick={() => setBet(val)}>{val}%</div>
+                                        ))}
+                                    </div>
+                                    <div className="options-grid">
+                                        {gameData.question.options.map((opt, i) => (
+                                            <button key={i} className="option-btn" onClick={() => submitAnswer(opt)}
+                                                style={{
+                                                    background: ['#ef4444', '#3b82f6', '#f59e0b', '#10b981'][i],
+                                                    border: multiAnswers.includes(opt) ? '5px solid white' : 'none'
+                                                }}>
+                                                {opt}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {gameData.question.type === 'multi-select' && (
+                                        <button onClick={submitMulti} style={{ marginTop: '20px' }}>Submit Selections</button>
+                                    )}
+                                </>
+                            )
+                        )}
+                    </div>
+                );
+            }
+
+            if (view === 'wait') {
+                return (
+                    <div className="card" style={{ textAlign: 'center' }}>
+                        <h1 style={{ fontSize: '4rem', marginBottom: '1rem' }}>{status?.is_correct ? '✅' : '❌'}</h1>
+                        <h2>{status?.is_correct ? 'Brilliant!' : 'Not quite...'}</h2>
+                        <p style={{ fontSize: '1.2rem', margin: '1rem 0' }}>The host will advance to the next slide soon.</p>
+                        <p style={{ fontSize: '1.5rem', margin: '1.5rem 0' }}>Current Score: {status?.new_score}</p>
+                        {isHost && <button onClick={() => setView('leaderboard')}>Show Scoreboard</button>}
+                    </div>
+                );
+            }
+
+            if (view === 'leaderboard') {
+                return (
+                    <div className="card">
+                        <h1>Standings</h1>
+                        <div style={{ margin: '1.5rem 0' }}>
+                            {gameData.leaderboard.slice(0, 5).map((p, i) => (
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: i === 0 ? 'rgba(255,215,0,0.1)' : 'transparent', borderRadius: '8px', marginBottom: '5px' }}>
+                                    <span>{i + 1}. {p.nickname}</span>
+                                    <span style={{ fontWeight: 800 }}>{p.score}</span>
+                                </div>
+                            ))}
+                        </div>
+                        {isHost ? (
+                            <button onClick={proceedNext}>Next Question</button>
+                        ) : (
+                            <p style={{ textAlign: 'center', opacity: 0.6 }}>Waiting for host...</p>
+                        )}
+                    </div>
+                );
+            }
+
+            if (view === 'gameOver') {
+                const top3 = gameData.leaderboard.slice(0, 3);
+                return (
+                    <div className="card" style={{ textAlign: 'center' }}>
+                        <h1>Final Standings 🏆</h1>
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: '10px', margin: '3rem 0', minHeight: '200px' }}>
+                            {top3[1] && (
+                                <div style={{ background: 'rgba(255,255,255,0.1)', width: '80px', height: '120px', borderRadius: '10px 10px 0 0', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '10px' }}>
+                                    <div style={{ fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis' }}>{top3[1].nickname}</div>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>2nd</div>
+                                </div>
+                            )}
+                            {top3[0] && (
+                                <div style={{ background: 'rgba(255,215,0,0.2)', width: '100px', height: '160px', borderRadius: '10px 10px 0 0', border: '2px solid gold', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '10px' }}>
+                                    <div style={{ fontSize: '1rem', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis' }}>{top3[0].nickname}</div>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>1st</div>
+                                </div>
+                            )}
+                            {top3[2] && (
+                                <div style={{ background: 'rgba(255,255,255,0.05)', width: '80px', height: '80px', borderRadius: '10px 10px 0 0', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '10px' }}>
+                                    <div style={{ fontSize: '0.7rem', overflow: 'hidden', textOverflow: 'ellipsis' }}>{top3[2].nickname}</div>
+                                    <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>3rd</div>
+                                </div>
+                            )}
+                        </div>
+                        <p style={{ fontSize: '1.2rem', margin: '1rem 0' }}>Your Final Score: {gameData.score}</p>
+                        <button onClick={() => window.location.reload()}>Play Again</button>
+                    </div>
+                );
+            }
+
+            return <div className="card"><h1>Connecting...</h1></div>;
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
