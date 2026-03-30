@@ -292,6 +292,7 @@
             const startGame = () => { socket.emit('start_game', { pin }); };
             const proceedNext = () => { socket.emit('next_question', { pin }); };
             const deleteQuiz = (quizId) => { if (confirm('Are you sure you want to delete this quiz?')) socket.emit('delete_quiz', { quiz_id: quizId }); };
+            const editQuiz = (quiz) => { setCurrentQuiz({ ...quiz }); setSlideIdx(0); setView('creator'); };
 
             const [multiAnswers, setMultiAnswers] = useState([]);
             const submitAnswer = (option) => {
@@ -365,6 +366,7 @@
                                         >
                                             HOST PLAYING QUIZ 🎮
                                         </button>
+                                        <button onClick={() => editQuiz(q)} style={{ background: '#3b82f6', width: 'auto', padding: '0 15px' }}>✏️</button>
                                         <button onClick={() => deleteQuiz(q.id)} style={{ background: '#ef4444', width: 'auto', padding: '0 15px' }}>🗑️</button>
                                     </div>
                                 </div>
