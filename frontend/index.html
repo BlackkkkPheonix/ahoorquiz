@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AhoorQuiz PRO - Elite Gaming Edition</title>
+    <title>AhoorQuiz PRO v4.1 - Elite Gaming</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -726,7 +726,11 @@
                 );
             }
 
-            return <div className="card"><h1>Connecting...</h1></div>;
+            return (
+                <div style={{ position: 'fixed', bottom: '10px', right: '10px', opacity: 0.3, fontSize: '0.7rem', pointerEvents: 'none' }}>
+                    AhoorQuiz PRO v4.1 - Elite Edition
+                </div>
+            );
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
