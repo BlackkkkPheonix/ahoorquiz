@@ -382,7 +382,59 @@
                 try {
                     let quiz;
                     if (raw.trim().startsWith('{') || raw.trim().startsWith('[')) {
-                        quiz = JSON.parse(raw);
+                        const parsed = JSON.parse(raw);
+                        // Handle array vs object
+                        if (Array.isArray(parsed)) {
+                            quiz = { title: "Imported JSON Quiz", questions: parsed };
+                        } else {
+                            quiz = parsed;
+                        }
+
+                        // Normalize questions to internal format
+                        if (quiz.questions && Array.isArray(quiz.questions)) {
+                            quiz.questions = quiz.questions.map(q => {
+                                let options = q.options;
+                                let answer = q.answer || q.Answer || q.correctAnswer || q.CorrectAnswer;
+                                let qType = q.type || "";
+
+                                // If options is an object (A, B, C, D style), convert to array
+                                if (options && typeof options === 'object' && !Array.isArray(options)) {
+                                    const keys = Object.keys(options).sort();
+                                    const optionsArray = keys.map(k => options[k]);
+                                    // Map answer key (e.g. "A") to its value
+                                    if (typeof answer === 'string') {
+                                        const cleanKey = answer.trim().toUpperCase();
+                                        if (options[cleanKey]) answer = options[cleanKey];
+                                        else if (options[answer]) answer = options[answer];
+                                    }
+                                    options = optionsArray;
+                                }
+
+                                // Normalize types to app-internal types
+                                let type = qType.toLowerCase();
+                                if (type === 'single' || type === 'multi') type = 'multi';
+                                else if (type === 'boolean' || type === 'tf' || type === 't/f') type = 'tf';
+                                else if (type === 'multi-select') type = 'multi-select';
+                                else if (type === 'open') type = 'open';
+                                else {
+                                    // Infer type if missing or unknown
+                                    if (Array.isArray(options) && options.length > 0) {
+                                        const isTF = (options.length === 2 && options.every(o => ['True', 'False', 'Yes', 'No'].includes(o)));
+                                        type = isTF ? 'tf' : 'multi';
+                                    } else {
+                                        type = 'open';
+                                    }
+                                }
+
+                                return {
+                                    ...q,
+                                    type,
+                                    question: q.question || "Untitled Question",
+                                    options: Array.isArray(options) ? options : [],
+                                    answer: answer !== undefined ? answer : ""
+                                };
+                            });
+                        }
                     } else {
                         // Smart CSV Parser
                         const lines = raw.split('\n')
@@ -427,6 +479,7 @@
                     socket.emit('save_quiz', { quiz: cleanQuiz });
                     alert('Quiz imported successfully! 🚀');
                 } catch (e) {
+                    console.error('Import Error:', e);
                     alert('Import Error: ' + e.message);
                 }
             };

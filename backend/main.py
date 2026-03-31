@@ -26,15 +26,73 @@ socket_app = socketio.ASGIApp(sio, app)
 # Quizzes File Path
 QUIZZES_FILE = os.path.join(os.path.dirname(__file__), "quizzes.json")
 
+def normalize_quiz_data(quiz):
+    if not isinstance(quiz, dict): return quiz
+    
+    questions = quiz.get("questions", [])
+    if not isinstance(questions, list): return quiz
+    
+    normalized_questions = []
+    for q in questions:
+        if not isinstance(q, dict): continue
+        
+        # 1. Handle options (dict -> list)
+        options = q.get("options", [])
+        if isinstance(options, dict):
+            # Sort keys to maintain A, B, C, D order
+            sorted_keys = sorted(options.keys())
+            options_list = [options[k] for k in sorted_keys]
+            
+            # 2. Resolve answer key if needed (e.g. "A" -> "$15")
+            answer = q.get("answer") or q.get("Answer") or q.get("correctAnswer") or q.get("CorrectAnswer")
+            if isinstance(answer, str) and answer.upper() in options:
+                answer = options[answer.upper()]
+            elif isinstance(answer, str) and answer in options:
+                answer = options[answer]
+            
+            q["options"] = options_list
+            q["answer"] = answer
+        else:
+            # Already a list or missing, just ensure answer key is lowercase
+            if "answer" not in q or not q["answer"]:
+                q["answer"] = q.get("Answer") or q.get("correctAnswer") or q.get("CorrectAnswer") or ""
+
+        # 3. Normalize type to app-internal types
+        q_type = str(q.get("type", "multi")).lower()
+        if q_type in ["single", "multi"]: q["type"] = "multi"
+        elif q_type in ["boolean", "tf", "t/f"]: q["type"] = "tf"
+        elif q_type == "multi-select": q["type"] = "multi-select"
+        elif q_type == "open": q["type"] = "open"
+        else:
+            # Infer type if unknown
+            opts = q.get("options", [])
+            if isinstance(opts, list) and len(opts) > 0:
+                is_tf = len(opts) == 2 and all(str(o) in ["True", "False", "Yes", "No"] for o in opts)
+                q["type"] = "tf" if is_tf else "multi"
+            else:
+                q["type"] = "open"
+        
+        normalized_questions.append(q)
+    
+    quiz["questions"] = normalized_questions
+    return quiz
+
 def load_quizzes():
     if not os.path.exists(QUIZZES_FILE):
         return []
     with open(QUIZZES_FILE, 'r') as f:
-        return json.load(f)
+        try:
+            quizzes = json.load(f)
+            # Normalize every quiz on load to fix legacy/bad data
+            return [normalize_quiz_data(q) for q in quizzes]
+        except:
+            return []
 
 def save_quizzes(quizzes):
+    # Normalize before saving just in case
+    normalized = [normalize_quiz_data(q) for q in quizzes]
     with open(QUIZZES_FILE, 'w') as f:
-        json.dump(quizzes, f, indent=4)
+        json.dump(normalized, f, indent=4)
 
 # In-memory game state
 games = {} # pin -> game_data
@@ -88,10 +146,10 @@ async def create_game(sid, data):
 async def save_quiz(sid, data):
     new_quiz = data.get("quiz")
     if not new_quiz: return
-    
+
     quizzes = load_quizzes()
     # If ID exists, update, otherwise append
-    existing = next((q for q in quizzes if q["id"] == new_quiz["id"]), None)
+    existing = next((q for q in quizzes if q["id"] == new_quiz.get("id")), None)
     if existing:
         quizzes = [new_quiz if q["id"] == new_quiz["id"] else q for q in quizzes]
     else:
@@ -100,9 +158,6 @@ async def save_quiz(sid, data):
     
     save_quizzes(quizzes)
     await sio.emit("quiz_saved", {"quiz": new_quiz}, room=sid)
-    await sio.emit("all_quizzes", {"quizzes": quizzes}) # Broadcast update to everyone
-    print(f"Quiz saved: {new_quiz['title']}")
-
     await sio.emit("all_quizzes", {"quizzes": quizzes}) # Broadcast update to everyone
     print(f"Quiz saved: {new_quiz['title']}")
 
@@ -155,10 +210,11 @@ async def start_game(sid, data):
         games[pin]["current_question"] = 0
         games[pin]["completed_players"] = set()
         question = games[pin]["questions"][0]
+        print(f"DEBUG: Emitting first question: {question.get('question')}, type: {question.get('type')}")
         await sio.emit("next_question", {
-            "question": question["question"],
+            "question": question.get("question", "Untitled Question"),
             "options": question.get("options", []),
-            "type": question["type"],
+            "type": question.get("type", "multi"),
             "index": 0
         }, room=pin)
 
@@ -239,5 +295,6 @@ async def next_question(sid, data):
 # Run with uvicorn
 if __name__ == "__main__":
     import uvicorn
+    print("AhoorQuiz Backend STARTING (with Normalization Fixes applied)...")
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(socket_app, host="0.0.0.0", port=port)

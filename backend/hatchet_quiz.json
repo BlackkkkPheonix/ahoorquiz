@@ -1,0 +1,176 @@
+{
+  "id": "8a7aeb61-3677-4aac-8e44-3287f707c44f",
+  "title": "Hatchet Quiz",
+  "questions": [
+    {
+      "question": "How much money did Brian's mum give him on the way to the airport?",
+      "options": [
+        "$15",
+        "$10",
+        "$5",
+        "$7,000,000,000"
+      ],
+      "type": "multi",
+      "answer": "$15"
+    },
+    {
+      "question": "What inspired Brian and helped him make sure things worked?",
+      "options": [
+        "Dream",
+        "Hedgehog / Porcupine",
+        "Moose",
+        "Foolbird accidentally igniting fire with its beak"
+      ],
+      "type": "multi",
+      "answer": "Dream"
+    },
+    {
+      "question": "What was the secret Brian was kissing someone that wasn't his dad described as?",
+      "options": [],
+      "type": "open",
+      "answer": "A knife"
+    },
+    {
+      "question": "What was the first ever meat Brian ate in the Canadian forest?",
+      "options": [
+        "Foolbird",
+        "Grizzly Bears",
+        "Fish",
+        "Porcupine / Hedgehog"
+      ],
+      "type": "multi",
+      "answer": "Foolbird"
+    },
+    {
+      "question": "True or False: Brian's hatchet was used for killing animals?",
+      "options": [
+        "True",
+        "False"
+      ],
+      "type": "tf",
+      "answer": "False"
+    },
+    {
+      "question": "Which animal punished Brian because he tried to steal its eggs?",
+      "options": [
+        "Moose",
+        "Skunk",
+        "Foolbird",
+        "Bear (Black)"
+      ],
+      "type": "multi",
+      "answer": "Skunk"
+    },
+    {
+      "question": "Which happened first?",
+      "options": [
+        "First fish",
+        "First foolbirds",
+        "First fire",
+        "First laugh"
+      ],
+      "type": "multi",
+      "answer": "First laugh"
+    },
+    {
+      "question": "Brian creating a fire helped because (Select best answer)",
+      "options": [
+        "No more mosquitoes",
+        "No more dangerous animals",
+        "Cook food",
+        "See at night"
+      ],
+      "type": "multi",
+      "answer": "No more mosquitoes"
+    },
+    {
+      "question": "When a plane flew above him Brian used a stick to make a fire but the plane didn't see him?",
+      "options": [
+        "True",
+        "False"
+      ],
+      "type": "tf",
+      "answer": "True"
+    },
+    {
+      "question": "What type of shoes was Brian wearing throughout the book?",
+      "options": [
+        "Basketball shoes",
+        "Sport / casual shoes",
+        "We weren't told",
+        "Tennis shoes"
+      ],
+      "type": "multi",
+      "answer": "Tennis shoes"
+    },
+    {
+      "question": "What was Brian's human friend called?",
+      "options": [],
+      "type": "open",
+      "answer": "Terry"
+    },
+    {
+      "question": "True or False: Brian made up the name \"foolbird\"",
+      "options": [
+        "True",
+        "False"
+      ],
+      "type": "tf",
+      "answer": "True"
+    },
+    {
+      "question": "How many pages does Hatchet have (original version)?",
+      "options": [],
+      "type": "open",
+      "answer": "592"
+    },
+    {
+      "question": "Did Brian use a bow or a spear to kill fish?",
+      "options": [
+        "Bow & Arrow",
+        "Spear"
+      ],
+      "type": "multi",
+      "answer": "Bow & Arrow"
+    },
+    {
+      "question": "End this thought from Brian: \"But the first ______ will bring it right back.\"",
+      "options": [],
+      "type": "open",
+      "answer": "Burger and fries"
+    },
+    {
+      "question": "Was Brian an optimist or pessimist?",
+      "options": [
+        "Optimist",
+        "Pessimist"
+      ],
+      "type": "multi",
+      "answer": "Optimist"
+    },
+    {
+      "question": "Who wrote Hatchet?",
+      "options": [],
+      "type": "open",
+      "answer": "Gary Paulsen"
+    },
+    {
+      "question": "How many times has Brian been injured because of animals?",
+      "options": [],
+      "type": "open",
+      "answer": "3 times"
+    },
+    {
+      "question": "At first what type of notebook did Gary Paulsen write Hatchet in?",
+      "options": [],
+      "type": "open",
+      "answer": "Spiral Notebook"
+    },
+    {
+      "question": "What type of hope did Brian have in the middle of the book?",
+      "options": [],
+      "type": "open",
+      "answer": "Tough Hope"
+    }
+  ]
+}
