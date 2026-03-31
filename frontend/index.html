@@ -341,12 +341,20 @@
                     setGameData(prev => ({ ...prev, leaderboard: data.leaderboard }));
                 });
 
-                newSocket.on('game_over', () => { console.log('DEBUG: Game Over'); setView('gameOver'); });
+                newSocket.on('game_over', () => {
+                    console.log('DEBUG: Game Over');
+                    // Clear stored game session so we don't auto-reconnect on page reload
+                    localStorage.removeItem('ahoor_pin');
+                    localStorage.removeItem('ahoor_isHost');
+                    setIsHost(false);
+                    setView('gameOver');
+                });
 
-                // If we have a pin/nickname on refresh, try to re-join/re-host
-                if (localStorage.getItem('ahoor_pin')) {
+                // Only re-join if we have a stored pin AND game hasn't ended
+                const storedPin = localStorage.getItem('ahoor_pin');
+                if (storedPin) {
                     newSocket.emit('join_game', {
-                        pin: localStorage.getItem('ahoor_pin'),
+                        pin: storedPin,
                         nickname: localStorage.getItem('ahoor_nickname') || 'Guest',
                         is_host: localStorage.getItem('ahoor_isHost') === 'true'
                     });
