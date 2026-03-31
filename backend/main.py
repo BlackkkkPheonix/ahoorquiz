@@ -119,10 +119,15 @@ async def delete_quiz(sid, data):
 
 @sio.event
 async def join_game(sid, data):
-    pin = data.get("pin")
+    pin = str(data.get("pin"))
     nickname = data.get("nickname")
+    is_rehost = data.get("is_host", False)
     
     if pin in games:
+        if is_rehost:
+            games[pin]["host_sid"] = sid
+            print(f"DEBUG: Host reconnected for game {pin}")
+        
         games[pin]["players"][sid] = {
             "nickname": nickname,
             "score": 0,
@@ -140,7 +145,7 @@ async def join_game(sid, data):
 
 @sio.event
 async def start_game(sid, data):
-    pin = data.get("pin")
+    pin = str(data.get("pin"))
     if pin in games and games[pin]["host_sid"] == sid:
         games[pin]["state"] = "QUESTION"
         games[pin]["current_question"] = 0
@@ -155,7 +160,7 @@ async def start_game(sid, data):
 
 @sio.event
 async def submit_answer(sid, data):
-    pin = data.get("pin")
+    pin = str(data.get("pin"))
     answer = data.get("answer")
     bet = data.get("bet", 0)
     print(f"DEBUG: submit_answer from {sid} for game {pin}, answer: {answer}")
@@ -211,7 +216,7 @@ async def submit_answer(sid, data):
 
 @sio.event
 async def next_question(sid, data):
-    pin = data.get("pin")
+    pin = str(data.get("pin"))
     if pin in games and games[pin]["host_sid"] == sid:
         game = games[pin]
         game["current_question"] += 1

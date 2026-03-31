@@ -228,17 +228,25 @@
         const { useState, useEffect } = React;
 
         const App = () => {
-            const [view, setView] = useState('join'); // join, lobby, question, wait, leaderboard, gameOver, creator, quizList
+            // Persist critical state in localStorage
+            const [view, setView] = useState(() => localStorage.getItem('ahoor_view') || 'join');
+            const [pin, setPin] = useState(() => localStorage.getItem('ahoor_pin') || '');
+            const [nickname, setNickname] = useState(() => localStorage.getItem('ahoor_nickname') || '');
+            const [isHost, setIsHost] = useState(() => localStorage.getItem('ahoor_isHost') === 'true');
+
+            useEffect(() => localStorage.setItem('ahoor_view', view), [view]);
+            useEffect(() => localStorage.setItem('ahoor_pin', pin), [pin]);
+            useEffect(() => localStorage.setItem('ahoor_nickname', nickname), [nickname]);
+            useEffect(() => localStorage.setItem('ahoor_isHost', isHost), [isHost]);
+
+
             const [socket, setSocket] = useState(null);
-            const [pin, setPin] = useState('');
-            const [nickname, setNickname] = useState('');
             const [gameData, setGameData] = useState({ players: [], question: null, score: 0, leaderboard: [], title: '' });
             const [bet, setBet] = useState(0);
             const [status, setStatus] = useState(null);
             const [quizzes, setQuizzes] = useState([]);
             const [currentQuiz, setCurrentQuiz] = useState({ id: null, title: '', questions: [] });
             const [slideIdx, setSlideIdx] = useState(0);
-            const [isHost, setIsHost] = useState(false);
             const [openAnswer, setOpenAnswer] = useState('');
             const [answeredCount, setAnsweredCount] = useState(0);
             const [isQuickPlay, setIsQuickPlay] = useState(false);
@@ -285,13 +293,32 @@
 
                 newSocket.on('game_over', () => { console.log('DEBUG: Game Over'); setView('gameOver'); });
 
+                // If we have a pin/nickname on refresh, try to re-join/re-host
+                if (localStorage.getItem('ahoor_pin')) {
+                    newSocket.emit('join_game', {
+                        pin: localStorage.getItem('ahoor_pin'),
+                        nickname: localStorage.getItem('ahoor_nickname') || 'Guest',
+                        is_host: localStorage.getItem('ahoor_isHost') === 'true'
+                    });
+                }
+
                 return () => newSocket.close();
             }, []);
 
-            const joinGame = () => { if (pin && nickname) socket.emit('join_game', { pin, nickname }); };
-            const createGame = (quizId) => { socket.emit('create_game', { quiz_id: quizId }); };
-            const startGame = () => { socket.emit('start_game', { pin }); };
-            const proceedNext = () => { socket.emit('next_question', { pin }); };
+            const joinGame = () => {
+                if (!pin) return alert('Please enter a Game PIN');
+                if (!nickname) return alert('Please enter a Nickname');
+                socket.emit('join_game', { pin: pin.toString(), nickname });
+            };
+            const createGame = (quizId) => {
+                if (!socket) return alert('Connecting to server... please wait.');
+                socket.emit('create_game', { quiz_id: quizId });
+            };
+            const startGame = () => {
+                if (!pin) return alert('Game PIN missing!');
+                socket.emit('start_game', { pin: pin.toString() });
+            };
+            const proceedNext = () => { socket.emit('next_question', { pin: pin.toString() }); };
             const deleteQuiz = (quizId) => { if (confirm('Are you sure you want to delete this quiz?')) socket.emit('delete_quiz', { quiz_id: quizId }); };
             const editQuiz = (quiz) => { setCurrentQuiz({ ...quiz }); setSlideIdx(0); setView('creator'); };
 
