@@ -291,6 +291,8 @@ async def next_question(sid, data):
             }, room=pin)
         else:
             await sio.emit("game_over", {}, room=pin)
+            # Delete the game so nobody can accidentally rejoin a finished game
+            del games[pin]
 
 # Run with uvicorn
 if __name__ == "__main__":

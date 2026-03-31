@@ -346,6 +346,7 @@
                     // Clear stored game session so we don't auto-reconnect on page reload
                     localStorage.removeItem('ahoor_pin');
                     localStorage.removeItem('ahoor_isHost');
+                    setPin('');
                     setIsHost(false);
                     setView('gameOver');
                 });
