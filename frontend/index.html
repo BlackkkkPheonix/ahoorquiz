@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AhoorQuiz v2 - Real-time Gaming</title>
+    <title>AhoorQuiz v3 - Mega Glow Edition</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -15,9 +15,11 @@
             --primary: #6366f1;
             --secondary: #8b5cf6;
             --accent: #ec4899;
-            --bg: #0f172a;
-            --glass: rgba(255, 255, 255, 0.05);
+            --bg: #020617;
+            --glass: rgba(15, 23, 42, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.1);
             --text: #f8fafc;
+            --glow: 0 0 20px rgba(99, 102, 241, 0.3);
         }
 
         * {
@@ -28,7 +30,7 @@
         }
 
         body {
-            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+            background: radial-gradient(circle at top right, #1e1b4b, #020617);
             color: var(--text);
             min-height: 100vh;
             display: flex;
@@ -36,6 +38,7 @@
             align-items: center;
             overflow-y: auto;
             padding: 40px 0;
+            background-attachment: fixed;
         }
 
         #root {
@@ -46,12 +49,12 @@
 
         .card {
             background: var(--glass);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
             padding: 40px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 25px 70px -10px rgba(0, 0, 0, 0.8), var(--glow);
+            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes fadeIn {
@@ -228,20 +231,20 @@
         const { useState, useEffect } = React;
 
         const App = () => {
-            // Persist critical state in localStorage
-            const [view, setView] = useState(() => localStorage.getItem('ahoor_view') || 'join');
+            // Persist critical state in localStorage (except view, to ensure cool landing)
+            const [view, setView] = useState('join');
             const [pin, setPin] = useState(() => localStorage.getItem('ahoor_pin') || '');
             const [nickname, setNickname] = useState(() => localStorage.getItem('ahoor_nickname') || '');
             const [isHost, setIsHost] = useState(() => localStorage.getItem('ahoor_isHost') === 'true');
 
-            useEffect(() => localStorage.setItem('ahoor_view', view), [view]);
             useEffect(() => localStorage.setItem('ahoor_pin', pin), [pin]);
             useEffect(() => localStorage.setItem('ahoor_nickname', nickname), [nickname]);
             useEffect(() => localStorage.setItem('ahoor_isHost', isHost), [isHost]);
 
-            // Clear old layout cycle keys to prevent "Ghost of Document Layout"
+            // Clear old layout cycle keys and force fresh start
             useEffect(() => {
                 localStorage.removeItem('ahoor_layout_cycle');
+                localStorage.removeItem('ahoor_view');
             }, []);
 
 
@@ -391,22 +394,28 @@
                 return (
                     <div className="card">
                         <h1>Your Quizzes</h1>
-                        <div style={{ margin: '1.5rem 0' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', margin: '2rem 0' }}>
                             {quizzes.map((q, i) => (
-                                <div key={i} className="leaderboard-row" style={{ flexDirection: 'column', padding: '20px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
-                                        <span style={{ fontWeight: 800 }}>{q.title}</span>
-                                        <span>{q.questions.length} Qs</span>
+                                <div key={i} className="leaderboard-row" style={{
+                                    flexDirection: 'column',
+                                    padding: '24px',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    borderRadius: '20px'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '15px' }}>
+                                        <span style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--primary)' }}>{q.title}</span>
+                                        <span style={{ opacity: 0.6 }}>{q.questions.length} Questions</span>
                                     </div>
-                                    <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                                    <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
                                         <button
                                             onClick={() => createGame(q.id)}
-                                            style={{ background: 'linear-gradient(to right, #10b981, #059669)', fontSize: '0.9rem', flex: 1 }}
+                                            style={{ background: 'linear-gradient(to right, #10b981, #059669)', fontSize: '1rem', flex: 2, padding: '12px' }}
                                         >
-                                            HOST PLAYING QUIZ 🎮
+                                            HOST GAME 🎮
                                         </button>
-                                        <button onClick={() => editQuiz(q)} style={{ background: '#3b82f6', width: 'auto', padding: '0 15px' }}>✏️</button>
-                                        <button onClick={() => deleteQuiz(q.id)} style={{ background: '#ef4444', width: 'auto', padding: '0 15px' }}>🗑️</button>
+                                        <button onClick={() => editQuiz(q)} style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid #3b82f6', width: '60px', borderRadius: '12px' }}>✏️</button>
+                                        <button onClick={() => deleteQuiz(q.id)} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: '1px solid #ef4444', width: '60px', borderRadius: '12px' }}>🗑️</button>
                                     </div>
                                 </div>
                             ))}
