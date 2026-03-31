@@ -371,6 +371,25 @@
             const proceedNext = () => { socket.emit('next_question', { pin: pin.toString() }); };
             const deleteQuiz = (quizId) => { if (confirm('Are you sure you want to delete this quiz?')) socket.emit('delete_quiz', { quiz_id: quizId }); };
             const editQuiz = (quiz) => { setCurrentQuiz({ ...quiz }); setSlideIdx(0); setView('creator'); };
+            const exportQuiz = (quiz) => {
+                const data = JSON.stringify(quiz, null, 2);
+                navigator.clipboard.writeText(data);
+                alert('Quiz JSON copied to clipboard! 📋 You can share this code with anyone.');
+            };
+            const importQuiz = () => {
+                const raw = prompt('Paste your Quiz JSON here:');
+                if (!raw) return;
+                try {
+                    const quiz = JSON.parse(raw);
+                    if (!quiz.title || !quiz.questions) throw new Error('Invalid format');
+                    // Strip ID to force create new on backend
+                    const { id, ...cleanQuiz } = quiz;
+                    socket.emit('save_quiz', { quiz: cleanQuiz });
+                    alert('Quiz imported successfully! 🚀');
+                } catch (e) {
+                    alert('Failed to import: ' + e.message);
+                }
+            };
 
             const [multiAnswers, setMultiAnswers] = useState([]);
             const submitAnswer = (option) => {
@@ -431,7 +450,10 @@
                     <div className="card" style={{ maxWidth: '1200px', width: '95%' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                             <h1>Quiz Arena</h1>
-                            <button onClick={() => { setCurrentQuiz({ id: null, title: '', questions: [] }); setSlideIdx(0); setView('creator'); }} style={{ width: 'auto', padding: '0 30px' }}>NEW MISSION ➕</button>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button onClick={importQuiz} style={{ width: 'auto', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--primary)', padding: '0 20px' }}>IMPORT 📤</button>
+                                <button onClick={() => { setCurrentQuiz({ id: null, title: '', questions: [] }); setSlideIdx(0); setView('creator'); }} style={{ width: 'auto', background: 'var(--primary)', padding: '0 30px' }}>NEW MISSION ➕</button>
+                            </div>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '25px' }}>
                             {quizzes.map((q, i) => (
@@ -446,15 +468,16 @@
                                 }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03) translateY(-10px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1) translateY(0)'}>
                                     <h2 style={{ color: 'var(--primary)', marginBottom: '10px' }}>{q.title}</h2>
                                     <p style={{ opacity: 0.6, marginBottom: '25px' }}>{q.questions.length} Slide Challenges</p>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 60px', gap: '10px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 60px 60px', gap: '10px' }}>
                                         <button
                                             onClick={() => createGame(q.id)}
                                             style={{ background: 'linear-gradient(to right, #10b981, #059669)', padding: '15px' }}
                                         >
                                             PLAY 🎮
                                         </button>
-                                        <button onClick={() => editQuiz(q)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--primary)', borderRadius: '15px' }}>✏️</button>
-                                        <button onClick={() => deleteQuiz(q.id)} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '15px' }}>🗑️</button>
+                                        <button onClick={() => exportQuiz(q)} title="Export" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid #8b5cf6', borderRadius: '15px' }}>📥</button>
+                                        <button onClick={() => editQuiz(q)} title="Edit" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--primary)', borderRadius: '15px' }}>✏️</button>
+                                        <button onClick={() => deleteQuiz(q.id)} title="Delete" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '15px' }}>🗑️</button>
                                     </div>
                                 </div>
                             ))}
