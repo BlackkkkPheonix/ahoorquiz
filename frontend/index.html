@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AhoorQuiz - Real-time Gaming</title>
+    <title>AhoorQuiz v2 - Real-time Gaming</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -257,7 +257,14 @@
                 setSocket(newSocket);
 
                 newSocket.on('connect', () => console.log('DEBUG: Socket connected!', newSocket.id));
-                newSocket.on('error', (err) => { console.error('DEBUG: Socket Error', err); alert('Error: ' + err.message); });
+                newSocket.on('error', (err) => {
+                    console.error('DEBUG: Socket Error', err);
+                    alert('Error: ' + err.message);
+                    if (err.message === 'Invalid PIN') {
+                        localStorage.removeItem('ahoor_pin');
+                        setView('join');
+                    }
+                });
 
                 newSocket.on('all_quizzes', (data) => setQuizzes(data.quizzes));
                 newSocket.on('game_created', (data) => {
@@ -368,9 +375,9 @@
                         <h1>AhoorQuiz</h1>
                         <div className="input-group"><input placeholder="GAME PIN" value={pin} onChange={(e) => setPin(e.target.value)} /></div>
                         <div className="input-group"><input placeholder="NICKNAME" value={nickname} onChange={(e) => setNickname(e.target.value)} /></div>
-                        <button onClick={joinGame}>Enter Game</button>
+                        <button onClick={joinGame} style={{ marginBottom: '10px' }}>Enter Game</button>
                         <p style={{ textAlign: 'center', margin: '1rem 0', opacity: 0.6 }}>or</p>
-                        <button onClick={() => setView('quizList')} style={{ background: 'transparent', border: '3px solid var(--primary)' }}>Host a Session</button>
+                        <button onClick={() => { localStorage.removeItem('ahoor_pin'); setView('quizList'); }} style={{ background: 'transparent', border: '3px solid var(--primary)' }}>Host a Session</button>
                     </div>
                 );
             }
