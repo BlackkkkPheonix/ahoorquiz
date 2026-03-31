@@ -43,7 +43,11 @@ games = {} # pin -> game_data
 @app.get("/")
 async def get_frontend():
     frontend_path = os.path.join(os.path.dirname(__file__), "../frontend/index.html")
-    return FileResponse(frontend_path)
+    response = FileResponse(frontend_path)
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 # Socket.IO Event Handlers 
 @sio.event
