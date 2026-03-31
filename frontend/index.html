@@ -377,17 +377,57 @@
                 alert('Quiz JSON copied to clipboard! 📋 You can share this code with anyone.');
             };
             const importQuiz = () => {
-                const raw = prompt('Paste your Quiz JSON here:');
+                const raw = prompt('Paste your Quiz JSON or CSV here:');
                 if (!raw) return;
                 try {
-                    const quiz = JSON.parse(raw);
-                    if (!quiz.title || !quiz.questions) throw new Error('Invalid format');
+                    let quiz;
+                    if (raw.trim().startsWith('{') || raw.trim().startsWith('[')) {
+                        quiz = JSON.parse(raw);
+                    } else {
+                        // Smart CSV Parser
+                        const lines = raw.split('\n')
+                            .map(l => l.replace(/\\$/, '').trim())
+                            .filter(l => l && !l.startsWith('{') && !l.startsWith('\\'));
+
+                        const headerIdx = lines.findIndex(l => l.toLowerCase().includes('question'));
+                        if (headerIdx === -1) throw new Error('Not a valid Quiz JSON or CSV format.');
+
+                        quiz = { title: "Imported CSV Quiz", questions: [] };
+                        lines.slice(headerIdx + 1).forEach(line => {
+                            const parts = line.split(',');
+                            if (parts.length < 2) return;
+                            const qText = parts[0];
+                            const ansRaw = parts[parts.length - 1];
+                            const optionsRaw = parts.slice(1, -1);
+                            let options = [];
+                            optionsRaw.forEach(p => {
+                                if (p.match(/^\d+$/) || !p) {
+                                    if (options.length > 0) options[options.length - 1] += "," + p;
+                                } else {
+                                    options.push(p);
+                                }
+                            });
+                            options = options.slice(0, 4);
+                            while (options.length < 4) options.push("");
+                            const ansMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
+                            const ansIdx = ansMap[ansRaw.toUpperCase()] ?? 0;
+                            quiz.questions.push({
+                                type: 'multi',
+                                question: qText,
+                                options: options,
+                                answer: options[ansIdx] || options[0]
+                            });
+                        });
+                    }
+
+                    if (!quiz || !quiz.questions || quiz.questions.length === 0) throw new Error('No questions found');
+
                     // Strip ID to force create new on backend
                     const { id, ...cleanQuiz } = quiz;
                     socket.emit('save_quiz', { quiz: cleanQuiz });
                     alert('Quiz imported successfully! 🚀');
                 } catch (e) {
-                    alert('Failed to import: ' + e.message);
+                    alert('Import Error: ' + e.message);
                 }
             };
 
