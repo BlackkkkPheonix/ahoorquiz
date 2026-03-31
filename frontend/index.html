@@ -239,6 +239,11 @@
             useEffect(() => localStorage.setItem('ahoor_nickname', nickname), [nickname]);
             useEffect(() => localStorage.setItem('ahoor_isHost', isHost), [isHost]);
 
+            // Clear old layout cycle keys to prevent "Ghost of Document Layout"
+            useEffect(() => {
+                localStorage.removeItem('ahoor_layout_cycle');
+            }, []);
+
 
             const [socket, setSocket] = useState(null);
             const [gameData, setGameData] = useState({ players: [], question: null, score: 0, leaderboard: [], title: '' });
@@ -454,9 +459,19 @@
 
                                 <div style={{ marginTop: '10px', opacity: 0.8, fontSize: '0.8rem', marginBottom: '5px' }}>MARK CORRECT ANSWERS</div>
                                 {q.type !== 'open' ? (
-                                    q.options.map((opt, oIndex) => (
-                                        <div key={oIndex} className="option-input" style={{ background: 'rgba(255,255,255,0.02)', padding: '5px', borderRadius: '8px', marginBottom: '8px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px' }}>
+                                    <div className="options-grid" style={{ marginTop: '10px' }}>
+                                        {q.options.map((opt, oIndex) => (
+                                            <div key={oIndex} style={{
+                                                background: ['rgba(239, 68, 68, 0.2)', 'rgba(59, 130, 246, 0.2)', 'rgba(245, 158, 11, 0.2)', 'rgba(16, 185, 129, 0.2)'][oIndex],
+                                                border: (q.type === 'multi-select' ? q.answer.includes(opt) : q.answer === opt)
+                                                    ? '3px solid white'
+                                                    : '1px solid rgba(255,255,255,0.1)',
+                                                borderRadius: '16px',
+                                                padding: '10px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '10px'
+                                            }}>
                                                 <input
                                                     type={q.type === 'multi-select' ? 'checkbox' : 'radio'}
                                                     checked={q.type === 'multi-select' ? q.answer.includes(opt) : q.answer === opt}
@@ -485,11 +500,11 @@
                                                         if (q.type !== 'multi-select' && newQs[slideIdx].answer === oldVal) newQs[slideIdx].answer = e.target.value;
                                                         setCurrentQuiz({ ...currentQuiz, questions: newQs });
                                                     }}
-                                                    style={{ border: 'none', background: 'transparent' }}
+                                                    style={{ border: 'none', background: 'transparent', padding: '5px' }}
                                                 />
                                             </div>
-                                        </div>
-                                    ))
+                                        ))}
+                                    </div>
                                 ) : (
                                     <input placeholder="Type correct answer here..." value={q.answer} onChange={(e) => {
                                         const newQs = [...currentQuiz.questions];
