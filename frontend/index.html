@@ -228,6 +228,15 @@
         const { useState, useEffect } = React;
 
         const App = () => {
+            // Layout Toggle Logic: Even refreshes = BETTER (Cool), Odd = BAD (Document)
+            const [layoutCycle, setLayoutCycle] = useState(() => {
+                const count = parseInt(localStorage.getItem('ahoor_layout_cycle') || '0');
+                localStorage.setItem('ahoor_layout_cycle', (count + 1).toString());
+                return count;
+            });
+            const isCoolLayout = layoutCycle % 2 === 0;
+
+
             const [view, setView] = useState('join'); // join, lobby, question, wait, leaderboard, gameOver, creator, quizList
             const [socket, setSocket] = useState(null);
             const [pin, setPin] = useState('');
@@ -355,22 +364,47 @@
                         <div style={{ margin: '1.5rem 0' }}>
                             {quizzes.length === 0 && <p style={{ opacity: 0.6, textAlign: 'center' }}>No quizzes yet.</p>}
                             {quizzes.map((q, i) => (
-                                <div key={i} className="leaderboard-row" style={{ flexDirection: 'column', padding: '20px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
-                                        <span style={{ fontWeight: 800 }}>{q.title}</span>
-                                        <span>{q.questions.length} Qs</span>
+                                isCoolLayout ? (
+                                    /* BETTER LAYOUT (Cool) */
+                                    <div key={i} className="leaderboard-row" style={{ flexDirection: 'column', padding: '20px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
+                                            <span style={{ fontWeight: 800 }}>{q.title}</span>
+                                            <span>{q.questions.length} Qs</span>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                                            <button
+                                                onClick={() => createGame(q.id)}
+                                                style={{ background: 'linear-gradient(to right, #10b981, #059669)', fontSize: '0.9rem', flex: 1 }}
+                                            >
+                                                HOST PLAYING QUIZ 🎮
+                                            </button>
+                                            <button onClick={() => editQuiz(q)} style={{ background: '#3b82f6', width: 'auto', padding: '0 15px' }}>✏️</button>
+                                            <button onClick={() => deleteQuiz(q.id)} style={{ background: '#ef4444', width: 'auto', padding: '0 15px' }}>🗑️</button>
+                                        </div>
                                     </div>
-                                    <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                                ) : (
+                                    /* BAD LAYOUT (Document) */
+                                    <div key={i} className="leaderboard-row" style={{ flexDirection: 'column', padding: '24px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '15px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '15px' }}>
+                                            <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary)' }}>{q.title}</span>
+                                            <span style={{ opacity: 0.6 }}>{q.questions.length} Questions</span>
+                                        </div>
                                         <button
                                             onClick={() => createGame(q.id)}
-                                            style={{ background: 'linear-gradient(to right, #10b981, #059669)', fontSize: '0.9rem', flex: 1 }}
+                                            style={{ background: 'linear-gradient(to right, #10b981, #059669)', padding: '15px', borderRadius: '12px', fontSize: '1rem', marginBottom: '10px' }}
                                         >
-                                            HOST PLAYING QUIZ 🎮
+                                            HOST GAME 🎮
                                         </button>
-                                        <button onClick={() => editQuiz(q)} style={{ background: '#3b82f6', width: 'auto', padding: '0 15px' }}>✏️</button>
-                                        <button onClick={() => deleteQuiz(q.id)} style={{ background: '#ef4444', width: 'auto', padding: '0 15px' }}>🗑️</button>
+                                        <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                                            <button onClick={() => editQuiz(q)} style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid #3b82f6', flex: 1, padding: '10px' }}>
+                                                EDIT QUIZ ✏️
+                                            </button>
+                                            <button onClick={() => deleteQuiz(q.id)} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: '1px solid #ef4444', flex: 1, padding: '10px' }}>
+                                                DELETE 🗑️
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
+                                )
                             ))}
                         </div>
                         <button onClick={() => { setCurrentQuiz({ id: null, title: '', questions: [] }); setSlideIdx(0); setView('creator'); }}>CREATE NEW QUIZ ➕</button>
@@ -383,19 +417,34 @@
                 const q = currentQuiz.questions[slideIdx];
                 return (
                     <div className="card" style={{ maxWidth: '800px', width: '95%' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <h1>{currentQuiz.title || 'New Quiz'}</h1>
-                            <button onClick={saveQuiz} style={{ width: 'auto', background: 'var(--accent)' }}>FINISH QUIZ ✅</button>
-                        </div>
-
-                        <div className="input-group">
-                            <input
-                                placeholder="Quiz Title"
-                                value={currentQuiz.title}
-                                onChange={(e) => setCurrentQuiz({ ...currentQuiz, title: e.target.value })}
-                                style={{ fontSize: '1.5rem', textAlign: 'center' }}
-                            />
-                        </div>
+                        {isCoolLayout ? (
+                            /* BETTER LAYOUT (Cool) */
+                            <>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                    <h1>{currentQuiz.title || 'New Quiz'}</h1>
+                                    <button onClick={saveQuiz} style={{ width: 'auto', background: 'var(--accent)' }}>FINISH QUIZ ✅</button>
+                                </div>
+                                <div className="input-group">
+                                    <input
+                                        placeholder="Quiz Title"
+                                        value={currentQuiz.title}
+                                        onChange={(e) => setCurrentQuiz({ ...currentQuiz, title: e.target.value })}
+                                        style={{ fontSize: '1.5rem', textAlign: 'center' }}
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            /* BAD LAYOUT (Document) */
+                            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                                <input
+                                    placeholder="Quiz Title"
+                                    value={currentQuiz.title}
+                                    onChange={(e) => setCurrentQuiz({ ...currentQuiz, title: e.target.value })}
+                                    style={{ fontSize: '1.2rem', flex: 1, background: 'rgba(255,255,255,0.03)' }}
+                                />
+                                <button onClick={saveQuiz} style={{ width: 'auto', background: 'var(--accent)', padding: '0 20px', fontSize: '0.9rem' }}>FINISH ✅</button>
+                            </div>
+                        )}
 
                         {currentQuiz.questions.length === 0 ? (
                             <div style={{ textAlign: 'center', margin: '3rem 0' }}>
@@ -420,81 +469,178 @@
                                     style={{ fontSize: '1.2rem' }}
                                 />
 
-                                <div style={{ marginTop: '10px', opacity: 0.8, fontSize: '0.8rem', marginBottom: '5px' }}>MARK CORRECT ANSWERS</div>
-                                {q.type !== 'open' ? (
-                                    q.options.map((opt, oIndex) => (
-                                        <div key={oIndex} className="option-input" style={{ background: 'rgba(255,255,255,0.02)', padding: '5px', borderRadius: '8px', marginBottom: '8px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px' }}>
-                                                <input
-                                                    type={q.type === 'multi-select' ? 'checkbox' : 'radio'}
-                                                    name={`q-${slideIdx}`}
-                                                    checked={q.type === 'multi-select' ? q.answer.includes(opt) : q.answer === opt}
-                                                    onChange={() => {
-                                                        const newQs = [...currentQuiz.questions];
-                                                        if (q.type === 'multi-select') {
-                                                            const currentAnswers = Array.isArray(newQs[slideIdx].answer) ? newQs[slideIdx].answer : [];
-                                                            if (currentAnswers.includes(opt)) {
-                                                                newQs[slideIdx].answer = currentAnswers.filter(a => a !== opt);
-                                                            } else {
-                                                                newQs[slideIdx].answer = [...currentAnswers, opt];
-                                                            }
-                                                        } else {
-                                                            newQs[slideIdx].answer = opt;
-                                                        }
-                                                        setCurrentQuiz({ ...currentQuiz, questions: newQs });
-                                                    }}
-                                                />
-                                                <input
-                                                    placeholder={`Option ${oIndex + 1}`}
-                                                    value={opt}
-                                                    onChange={(e) => {
-                                                        const newQs = [...currentQuiz.questions];
-                                                        const oldVal = newQs[slideIdx].options[oIndex];
-                                                        newQs[slideIdx].options[oIndex] = e.target.value;
-                                                        if (q.type !== 'multi-select' && newQs[slideIdx].answer === oldVal) newQs[slideIdx].answer = e.target.value;
-                                                        setCurrentQuiz({ ...currentQuiz, questions: newQs });
-                                                    }}
-                                                    style={{ border: 'none', background: 'transparent' }}
-                                                />
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <input placeholder="Type correct answer here..." value={q.answer} onChange={(e) => {
-                                        const newQs = [...currentQuiz.questions];
-                                        newQs[slideIdx].answer = e.target.value;
-                                        setCurrentQuiz({ ...currentQuiz, questions: newQs });
-                                    }} />
-                                )}
-
-                                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                                    <button
-                                        disabled={slideIdx === 0}
-                                        onClick={() => setSlideIdx(slideIdx - 1)}
-                                        style={{ background: 'rgba(255,255,255,0.1)', opacity: slideIdx === 0 ? 0.3 : 1 }}
-                                    >
-                                        ⬅️ BACK SLIDE
-                                    </button>
-                                    <button
-                                        disabled={slideIdx === currentQuiz.questions.length - 1}
-                                        onClick={() => setSlideIdx(slideIdx + 1)}
-                                        style={{ background: 'rgba(255,255,255,0.1)', opacity: slideIdx === currentQuiz.questions.length - 1 ? 0.3 : 1 }}
-                                    >
-                                        NEXT SLIDE ➡️
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            if (confirm('Delete this slide?')) {
-                                                const newQs = currentQuiz.questions.filter((_, i) => i !== slideIdx);
+                                {isCoolLayout ? (
+                                    /* BETTER LAYOUT OPTIONS (Cool) */
+                                    <>
+                                        <div style={{ marginTop: '10px', opacity: 0.8, fontSize: '0.8rem', marginBottom: '5px' }}>MARK CORRECT ANSWERS</div>
+                                        {q.type !== 'open' ? (
+                                            q.options.map((opt, oIndex) => (
+                                                <div key={oIndex} className="option-input" style={{ background: 'rgba(255,255,255,0.02)', padding: '5px', borderRadius: '8px', marginBottom: '8px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px' }}>
+                                                        <input
+                                                            type={q.type === 'multi-select' ? 'checkbox' : 'radio'}
+                                                            name={`q-${slideIdx}`}
+                                                            checked={q.type === 'multi-select' ? q.answer.includes(opt) : q.answer === opt}
+                                                            onChange={() => {
+                                                                const newQs = [...currentQuiz.questions];
+                                                                if (q.type === 'multi-select') {
+                                                                    const currentAnswers = Array.isArray(newQs[slideIdx].answer) ? newQs[slideIdx].answer : [];
+                                                                    if (currentAnswers.includes(opt)) {
+                                                                        newQs[slideIdx].answer = currentAnswers.filter(a => a !== opt);
+                                                                    } else {
+                                                                        newQs[slideIdx].answer = [...currentAnswers, opt];
+                                                                    }
+                                                                } else {
+                                                                    newQs[slideIdx].answer = opt;
+                                                                }
+                                                                setCurrentQuiz({ ...currentQuiz, questions: newQs });
+                                                            }}
+                                                        />
+                                                        <input
+                                                            placeholder={`Option ${oIndex + 1}`}
+                                                            value={opt}
+                                                            onChange={(e) => {
+                                                                const newQs = [...currentQuiz.questions];
+                                                                const oldVal = newQs[slideIdx].options[oIndex];
+                                                                newQs[slideIdx].options[oIndex] = e.target.value;
+                                                                if (q.type !== 'multi-select' && newQs[slideIdx].answer === oldVal) newQs[slideIdx].answer = e.target.value;
+                                                                setCurrentQuiz({ ...currentQuiz, questions: newQs });
+                                                            }}
+                                                            style={{ border: 'none', background: 'transparent' }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <input placeholder="Type correct answer here..." value={q.answer} onChange={(e) => {
+                                                const newQs = [...currentQuiz.questions];
+                                                newQs[slideIdx].answer = e.target.value;
                                                 setCurrentQuiz({ ...currentQuiz, questions: newQs });
-                                                if (slideIdx > 0) setSlideIdx(slideIdx - 1);
-                                            }
-                                        }}
-                                        style={{ background: '#ef4444', width: 'auto' }}
-                                    >
-                                        🗑️
-                                    </button>
-                                </div>
+                                            }} />
+                                        )}
+
+                                        <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                                            <button
+                                                disabled={slideIdx === 0}
+                                                onClick={() => setSlideIdx(slideIdx - 1)}
+                                                style={{ background: 'rgba(255,255,255,0.1)', opacity: slideIdx === 0 ? 0.3 : 1 }}
+                                            >
+                                                ⬅️ BACK SLIDE
+                                            </button>
+                                            <button
+                                                disabled={slideIdx === currentQuiz.questions.length - 1}
+                                                onClick={() => setSlideIdx(slideIdx + 1)}
+                                                style={{ background: 'rgba(255,255,255,0.1)', opacity: slideIdx === currentQuiz.questions.length - 1 ? 0.3 : 1 }}
+                                            >
+                                                NEXT SLIDE ➡️
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    if (confirm('Delete this slide?')) {
+                                                        const newQs = currentQuiz.questions.filter((_, i) => i !== slideIdx);
+                                                        setCurrentQuiz({ ...currentQuiz, questions: newQs });
+                                                        if (slideIdx > 0) setSlideIdx(slideIdx - 1);
+                                                    }
+                                                }}
+                                                style={{ background: '#ef4444', width: 'auto' }}
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    /* BAD LAYOUT OPTIONS (Document) */
+                                    <>
+                                        <div style={{ marginTop: '10px', opacity: 0.8, fontSize: '0.8rem', marginBottom: '10px', textAlign: 'center' }}>MARK CORRECT ANSWERS</div>
+                                        {q.type !== 'open' ? (
+                                            <div className="options-grid" style={{ margin: 0 }}>
+                                                {q.options.map((opt, oIndex) => (
+                                                    <div key={oIndex} style={{
+                                                        background: ['rgba(239, 68, 68, 0.15)', 'rgba(59, 130, 246, 0.15)', 'rgba(245, 158, 11, 0.15)', 'rgba(16, 185, 129, 0.15)'][oIndex],
+                                                        border: (q.type === 'multi-select' ? q.answer.includes(opt) : q.answer === opt)
+                                                            ? '2px solid white'
+                                                            : '2px solid rgba(255,255,255,0.1)',
+                                                        borderRadius: '16px',
+                                                        padding: '15px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '10px'
+                                                    }}>
+                                                        <input
+                                                            type={q.type === 'multi-select' ? 'checkbox' : 'radio'}
+                                                            name={`q-${slideIdx}`}
+                                                            checked={q.type === 'multi-select' ? q.answer.includes(opt) : q.answer === opt}
+                                                            onChange={() => {
+                                                                const newQs = [...currentQuiz.questions];
+                                                                if (q.type === 'multi-select') {
+                                                                    const currentAnswers = Array.isArray(newQs[slideIdx].answer) ? newQs[slideIdx].answer : [];
+                                                                    if (currentAnswers.includes(opt)) {
+                                                                        newQs[slideIdx].answer = currentAnswers.filter(a => a !== opt);
+                                                                    } else {
+                                                                        newQs[slideIdx].answer = [...currentAnswers, opt];
+                                                                    }
+                                                                } else {
+                                                                    newQs[slideIdx].answer = opt;
+                                                                }
+                                                                setCurrentQuiz({ ...currentQuiz, questions: newQs });
+                                                            }}
+                                                            style={{ width: '20px', height: '20px', margin: 0 }}
+                                                        />
+                                                        <input
+                                                            placeholder={`Option ${oIndex + 1}`}
+                                                            value={opt}
+                                                            onChange={(e) => {
+                                                                const newQs = [...currentQuiz.questions];
+                                                                const oldVal = newQs[slideIdx].options[oIndex];
+                                                                newQs[slideIdx].options[oIndex] = e.target.value;
+                                                                if (q.type !== 'multi-select' && newQs[slideIdx].answer === oldVal) newQs[slideIdx].answer = e.target.value;
+                                                                setCurrentQuiz({ ...currentQuiz, questions: newQs });
+                                                            }}
+                                                            style={{ border: 'none', background: 'transparent', padding: 0, fontSize: '1rem', textAlign: 'center' }}
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <input placeholder="Type correct answer here..." value={q.answer} onChange={(e) => {
+                                                const newQs = [...currentQuiz.questions];
+                                                newQs[slideIdx].answer = e.target.value;
+                                                setCurrentQuiz({ ...currentQuiz, questions: newQs });
+                                            }} />
+                                        )}
+
+                                        <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                                            <button
+                                                disabled={slideIdx === 0}
+                                                onClick={() => setSlideIdx(slideIdx - 1)}
+                                                style={{ background: 'rgba(255,255,255,0.1)', opacity: slideIdx === 0 ? 0.3 : 1, flex: 1 }}
+                                            >
+                                                ⬅️ PREVIOUS
+                                            </button>
+                                            <button
+                                                disabled={slideIdx === currentQuiz.questions.length - 1}
+                                                onClick={() => setSlideIdx(slideIdx + 1)}
+                                                style={{ background: 'rgba(255,255,255,0.1)', opacity: slideIdx === currentQuiz.questions.length - 1 ? 0.3 : 1, flex: 1 }}
+                                            >
+                                                NEXT ➡️
+                                            </button>
+                                        </div>
+                                        <div style={{ marginTop: '15px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '15px' }}>
+                                            <button
+                                                onClick={() => {
+                                                    if (confirm('Delete this entire question?')) {
+                                                        const newQs = currentQuiz.questions.filter((_, i) => i !== slideIdx);
+                                                        setCurrentQuiz({ ...currentQuiz, questions: newQs });
+                                                        if (slideIdx > 0) setSlideIdx(slideIdx - 1);
+                                                    }
+                                                }}
+                                                style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid #ef4444' }}
+                                            >
+                                                DELETE THIS QUESTION 🗑️
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         )}
 
