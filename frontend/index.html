@@ -471,7 +471,10 @@
                     <div className="card" style={{ maxWidth: '800px', width: '95%' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                             <h1>{currentQuiz.title || 'New Quiz'}</h1>
-                            <button onClick={saveQuiz} style={{ width: 'auto', background: 'var(--accent)' }}>FINISH QUIZ ✅</button>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button onClick={() => setView('quizList')} style={{ width: 'auto', background: 'rgba(255,255,255,0.1)' }}>BACK ⬅️</button>
+                                <button onClick={saveQuiz} style={{ width: 'auto', background: 'var(--accent)' }}>FINISH QUIZ ✅</button>
+                            </div>
                         </div>
                         <div className="input-group">
                             <input
