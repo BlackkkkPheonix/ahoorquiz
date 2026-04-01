@@ -272,7 +272,10 @@
             const [nickname, setNickname] = useState(() => localStorage.getItem('ahoor_nickname') || '');
             const [isHost, setIsHost] = useState(() => localStorage.getItem('ahoor_isHost') === 'true');
 
-            useEffect(() => localStorage.setItem('ahoor_pin', pin), [pin]);
+            useEffect(() => {
+                if (pin) localStorage.setItem('ahoor_pin', pin);
+                else localStorage.removeItem('ahoor_pin');
+            }, [pin]);
             useEffect(() => localStorage.setItem('ahoor_nickname', nickname), [nickname]);
             useEffect(() => localStorage.setItem('ahoor_isHost', isHost), [isHost]);
 
@@ -296,7 +299,8 @@
 
 
             useEffect(() => {
-                const newSocket = io(); // Connect to the same host that served the page
+                // reconnection: false prevents Socket.IO from auto-reconnecting and replaying buffered emits
+                const newSocket = io({ reconnection: false });
                 setSocket(newSocket);
 
                 newSocket.on('connect', () => console.log('DEBUG: Socket connected!', newSocket.id));
@@ -342,8 +346,10 @@
                 });
 
                 newSocket.on('game_over', () => {
-                    console.log('DEBUG: Game Over');
-                    // Clear stored game session so we don't auto-reconnect on page reload
+                    console.log('DEBUG: Game Over - disconnecting socket and clearing state');
+                    // Physically disconnect the socket so it can NEVER reconnect or replay events
+                    newSocket.disconnect();
+                    // Clear stored game session so page reload starts fresh
                     localStorage.removeItem('ahoor_pin');
                     localStorage.removeItem('ahoor_isHost');
                     setPin('');
