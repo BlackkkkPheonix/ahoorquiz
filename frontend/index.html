@@ -770,7 +770,7 @@
                             ) : (
                                 <>
                                     <div className="bet-chips">
-                                        {[0, 10, 25, 50].map(val => (
+                                        {[10, 25, 50].map(val => (
                                             <div key={val} className={`chip ${bet === val ? 'active' : ''}`} onClick={() => setBet(val)}>{val}%</div>
                                         ))}
                                     </div>

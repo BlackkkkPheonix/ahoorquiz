@@ -2,3 +2,4 @@ fastapi
 uvicorn
 python-socketio
 python-engineio
+psycopg2-binary
