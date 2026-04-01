@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>AhoorQuiz PRO v4.1 - Elite Gaming</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -31,14 +31,21 @@
 
         body {
             background: radial-gradient(circle at top right, #1e1b4b, #020617);
+            background-attachment: scroll;
+            /* fixed breaks on iOS Safari */
             color: var(--text);
             min-height: 100vh;
+            min-height: -webkit-fill-available;
+            /* fix iOS Safari 100vh bug */
             display: flex;
             justify-content: center;
             align-items: center;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            /* smooth scrolling on iOS */
             padding: 40px 0;
-            background-attachment: fixed;
+            padding-bottom: env(safe-area-inset-bottom, 40px);
+            /* iPhone notch support */
         }
 
         #root {
@@ -49,11 +56,14 @@
 
         .card {
             background: var(--glass);
+            -webkit-backdrop-filter: blur(30px);
+            /* Safari */
             backdrop-filter: blur(30px);
             border: 2px solid rgba(255, 255, 255, 0.1);
             border-radius: 40px;
             padding: 50px;
             box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.9), var(--glow);
+            -webkit-animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1);
             animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
             overflow: hidden;
@@ -127,7 +137,12 @@
             padding: 15px;
             color: white;
             font-size: 1.1rem;
+            font-family: 'Outfit', sans-serif;
+            /* Firefox doesn't inherit font in inputs */
             transition: all 0.3s ease;
+            -webkit-appearance: none;
+            /* remove iOS/Safari default styling */
+            appearance: none;
         }
 
         input:focus {
@@ -145,7 +160,17 @@
             color: white;
             font-size: 1.1rem;
             font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            /* Firefox doesn't inherit font in buttons */
             cursor: pointer;
+            -webkit-appearance: none;
+            /* remove Safari default button styling */
+            appearance: none;
+            -webkit-tap-highlight-color: transparent;
+            /* remove tap flash on mobile */
+            touch-action: manipulation;
+            /* faster tap response on mobile */
+            transition: -webkit-transform 0.2s, transform 0.2s, box-shadow 0.2s;
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
@@ -187,6 +212,9 @@
             border-radius: 20px;
             cursor: pointer;
             font-weight: 600;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            -webkit-transition: all 0.3s;
             transition: all 0.3s;
         }
 
@@ -388,8 +416,22 @@
             const editQuiz = (quiz) => { setCurrentQuiz({ ...quiz }); setSlideIdx(0); setView('creator'); };
             const exportQuiz = (quiz) => {
                 const data = JSON.stringify(quiz, null, 2);
-                navigator.clipboard.writeText(data);
+                // Cross-browser clipboard: try modern API first, fall back to execCommand
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(data).catch(() => fallbackCopy(data));
+                } else {
+                    fallbackCopy(data);
+                }
                 alert('Quiz JSON copied to clipboard! 📋 You can share this code with anyone.');
+            };
+            const fallbackCopy = (text) => {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+                document.body.appendChild(ta);
+                ta.focus(); ta.select();
+                try { document.execCommand('copy'); } catch (e) { console.warn('Copy failed', e); }
+                document.body.removeChild(ta);
             };
             const importQuiz = () => {
                 const raw = prompt('Paste your Quiz JSON or CSV here:');
